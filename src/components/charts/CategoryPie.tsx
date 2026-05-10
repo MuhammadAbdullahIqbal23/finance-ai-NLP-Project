@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 
 const COLORS = [
@@ -21,6 +22,12 @@ export function CategoryPie({
   data: { category: string; total: number }[]
   title?: string
 }) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   return (
     <div className="card">
       <div className="mb-3 flex items-center justify-between">
@@ -28,35 +35,39 @@ export function CategoryPie({
         <span className="text-xs text-muted">PKR</span>
       </div>
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="total"
-              nameKey="category"
-              innerRadius={50}
-              outerRadius={90}
-              paddingAngle={2}
-              stroke="none"
-            >
-              {data.map((_, idx) => (
-                <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                background: "#131722",
-                border: "1px solid #1f2536",
-                borderRadius: 8,
-                color: "#e8eaf0",
-              }}
-              formatter={(v: unknown, name: unknown) => [
-                typeof v === "number" ? `PKR ${v.toLocaleString("en-PK")}` : String(v ?? ""),
-                String(name ?? ""),
-              ]}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+        {mounted ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="total"
+                nameKey="category"
+                innerRadius={50}
+                outerRadius={90}
+                paddingAngle={2}
+                stroke="none"
+              >
+                {data.map((_, idx) => (
+                  <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  background: "#131722",
+                  border: "1px solid #1f2536",
+                  borderRadius: 8,
+                  color: "#e8eaf0",
+                }}
+                formatter={(v: unknown, name: unknown) => [
+                  typeof v === "number" ? `PKR ${v.toLocaleString("en-PK")}` : String(v ?? ""),
+                  String(name ?? ""),
+                ]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full" />
+        )}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-y-1 text-xs">
         {data.map((d, idx) => (

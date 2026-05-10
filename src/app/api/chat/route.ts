@@ -10,6 +10,20 @@ const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY,
 })
 
+const CHAT_COOLDOWN_MS = 8000
+let lastChatRequestAt = 0
+
+function getClientErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "")
+  const lower = message.toLowerCase()
+
+  if (lower.includes("rate limit") || lower.includes("tpm") || lower.includes("429")) {
+    return "Rate limit reached. Please wait a few seconds and try again."
+  }
+
+  return "Chat temporarily unavailable. Please try again."
+}
+
 export async function POST(req: Request) {
   if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY.startsWith("REPLACE_WITH_")) {
     return Response.json(
@@ -21,6 +35,24 @@ export async function POST(req: Request) {
     )
   }
 
+  const now = Date.now()
+  const elapsed = now - lastChatRequestAt
+  if (elapsed < CHAT_COOLDOWN_MS) {
+    const retryAfterSeconds = Math.ceil((CHAT_COOLDOWN_MS - elapsed) / 1000)
+    return Response.json(
+      {
+        error: "Rate limit reached. Please wait a few seconds and try again.",
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(retryAfterSeconds),
+        },
+      },
+    )
+  }
+  lastChatRequestAt = now
+
   const { messages } = await req.json()
 
   const system = await buildSystemPrompt(DEMO_USER_ID)
@@ -31,6 +63,7 @@ export async function POST(req: Request) {
     system,
     messages,
     tools,
+    maxRetries: 0,
     maxSteps: 6,
     temperature: 0.3,
     onError({ error }) {
@@ -38,5 +71,7 @@ export async function POST(req: Request) {
     },
   })
 
-  return result.toDataStreamResponse()
+  return result.toDataStreamResponse({
+    getErrorMessage: getClientErrorMessage,
+  })
 }

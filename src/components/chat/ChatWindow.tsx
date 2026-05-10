@@ -27,6 +27,22 @@ export function ChatWindow() {
     endRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages.length])
 
+  const errorText = error?.message ?? ""
+  const errorLower = errorText.toLowerCase()
+  const isRateLimit = errorLower.includes("rate limit") || errorLower.includes("429")
+  const isApiKey =
+    errorLower.includes("groq_api_key") || errorLower.includes("api key") || errorLower.includes("unauthorized")
+  const errorTitle = isRateLimit
+    ? "Rate limit reached."
+    : isApiKey
+      ? "Missing or invalid API key."
+      : "Chat temporarily unavailable."
+  const errorHint = isRateLimit
+    ? "Please wait a few seconds and try again."
+    : isApiKey
+      ? "Set GROQ_API_KEY in .env.local and restart the dev server."
+      : "Please try again in a few seconds."
+
   return (
     <div className="flex flex-col h-[calc(100vh-160px)]">
       <div className="flex-1 overflow-y-auto space-y-4 pb-4">
@@ -96,11 +112,8 @@ export function ChatWindow() {
 
         {error && (
           <div className="card text-danger text-sm">
-            <strong>Error:</strong> {error.message}
-            <p className="mt-1 text-muted text-xs">
-              Check that <code>GROQ_API_KEY</code> is set in <code>.env.local</code> and the
-              dev server has been restarted.
-            </p>
+            <strong>{errorTitle}</strong>
+            <p className="mt-1 text-muted text-xs">{errorHint}</p>
           </div>
         )}
 
