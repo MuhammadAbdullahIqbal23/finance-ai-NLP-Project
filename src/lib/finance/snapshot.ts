@@ -11,6 +11,10 @@ import type { FinancialSnapshot, Window } from "@/lib/types"
 
 export async function getSnapshot(userId: number, asOf = new Date()): Promise<FinancialSnapshot> {
   const accounts = await prisma.account.findMany({ where: { userId } })
+  const totalBalance = accounts.reduce((s, a) => s + a.balance, 0)
+  const liquidBalance = accounts
+    .filter((a) => a.type === "checking" || a.type === "cash")
+    .reduce((s, a) => s + a.balance, 0)
 
   const thisFrom = startOfMonth(asOf)
   const thisTo = endOfMonth(asOf)
@@ -40,7 +44,8 @@ export async function getSnapshot(userId: number, asOf = new Date()): Promise<Fi
   return {
     asOf: asOf.toISOString(),
     balances: accounts.map((a) => ({ name: a.name, type: a.type, balance: a.balance })),
-    totalBalance: accounts.reduce((s, a) => s + a.balance, 0),
+    totalBalance,
+    liquidBalance,
     income: {
       thisMonth: thisMonth?.income ?? 0,
       lastMonth: lastFullMonth?.income ?? 0,

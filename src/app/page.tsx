@@ -24,6 +24,7 @@ export default async function OverviewPage() {
   })
 
   const savingsRatePct = Math.round(snapshot.savings.rate * 100)
+  const liquidAccounts = snapshot.balances.filter((b) => b.type !== "savings")
   const projectedTone =
     health.status === "on_track" ? "success" : health.status === "watch" ? "warning" : "danger"
 
@@ -50,8 +51,8 @@ export default async function OverviewPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
           label="Liquid balance"
-          value={fmtPKR(snapshot.totalBalance)}
-          hint={`${snapshot.balances.length} accounts`}
+          value={fmtPKR(snapshot.liquidBalance)}
+          hint={`${liquidAccounts.length} liquid accounts`}
         />
         <KpiCard
           label="Spend MTD"

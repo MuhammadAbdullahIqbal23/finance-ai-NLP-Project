@@ -62,7 +62,7 @@ export async function buildSystemPrompt(userId: number) {
   const liveContext = `LIVE_CONTEXT (generated ${new Date().toISOString()}):
 - Balances:
 ${balLines}
-  Total liquid: ${fmtPKR(ctx.totalBalance)}
+  Total liquid: ${fmtPKR(ctx.liquidBalance)}
 - Income (this month so far): ${fmtPKR(ctx.monthIncome)}; profile income ${fmtPKR(ctx.income)}/mo
 - Spend MTD: ${fmtPKR(ctx.monthSpend)}; projected month-end: ${fmtPKR(health.projectedMonthSpend)}; 3-mo avg: ${fmtPKR(ctx.last3MonthsSpend.length ? Math.round(ctx.last3MonthsSpend.reduce((a, b) => a + b, 0) / ctx.last3MonthsSpend.length) : 0)}
 - Last 3 months expense: ${last3Lines}

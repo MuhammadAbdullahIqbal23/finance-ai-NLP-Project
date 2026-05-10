@@ -13,6 +13,7 @@ export interface FinancialSnapshot {
   asOf: string
   balances: { name: string; type: string; balance: number }[]
   totalBalance: number
+  liquidBalance: number
   income: { thisMonth: number; lastMonth: number; threeMonthAvg: number }
   spend: {
     thisMonthMTD: number

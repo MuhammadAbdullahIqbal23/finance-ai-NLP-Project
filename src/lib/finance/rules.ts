@@ -58,9 +58,14 @@ export async function buildContext(userId: number, asOf = new Date()) {
     income({ gte: thisMonthFrom, lte: thisMonthTo }),
   ])
 
+  const sumByType = (type: string) =>
+    accounts.filter((a) => a.type === type).reduce((s, a) => s + a.balance, 0)
+
   const totalBalance = accounts.reduce((s, a) => s + a.balance, 0)
-  const checkingBalance = accounts.find((a) => a.type === "checking")?.balance ?? 0
-  const savingsBalance = accounts.find((a) => a.type === "savings")?.balance ?? 0
+  const checkingBalance = sumByType("checking")
+  const savingsBalance = sumByType("savings")
+  const cashBalance = sumByType("cash")
+  const liquidBalance = checkingBalance + cashBalance
 
   const monthlyExpenseAvg = Math.round(
     mean(last3.map((m) => m.expense)) || profile.monthlyIncome * 0.7,
@@ -99,6 +104,7 @@ export async function buildContext(userId: number, asOf = new Date()) {
     last3MonthsSavings: last3.map((m) => m.savings),
     avgMonthlySavings: avgSavings,
     totalBalance,
+    liquidBalance,
     checkingBalance,
     savingsBalance,
     totalSpend3,
