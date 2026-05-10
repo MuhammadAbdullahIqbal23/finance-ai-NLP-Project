@@ -1,14 +1,17 @@
 import { streamText } from "ai"
-import { createGroq } from "@ai-sdk/groq"
+import { createOpenAI } from "@ai-sdk/openai"
 import { buildSystemPrompt } from "@/lib/chat/prompt"
 import { buildTools, DEMO_USER_ID } from "@/lib/chat/tools"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
 
-const groq = createGroq({
-  apiKey: process.env.GROQ_API_KEY,
+const localLLM = createOpenAI({
+  apiKey: process.env.LOCAL_LLM_API_KEY ?? "lm-studio",
+  baseURL: process.env.LOCAL_LLM_BASE_URL ?? "http://localhost:1234/v1",
 })
+
+const localModelId = process.env.LOCAL_LLM_MODEL
 
 const CHAT_COOLDOWN_MS = 8000
 let lastChatRequestAt = 0
@@ -25,11 +28,11 @@ function getClientErrorMessage(error: unknown) {
 }
 
 export async function POST(req: Request) {
-  if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY.startsWith("REPLACE_WITH_")) {
+  if (!localModelId) {
     return Response.json(
       {
         error:
-          "GROQ_API_KEY missing or placeholder. Edit .env.local and put a fresh key from https://console.groq.com/keys",
+          "LOCAL_LLM_MODEL missing. Set it in .env.local to the model id reported by your local server (GET /v1/models).",
       },
       { status: 500 },
     )
@@ -59,7 +62,7 @@ export async function POST(req: Request) {
   const tools = buildTools(DEMO_USER_ID)
 
   const result = streamText({
-    model: groq("llama-3.3-70b-versatile"),
+    model: localLLM(localModelId),
     system,
     messages,
     tools,
